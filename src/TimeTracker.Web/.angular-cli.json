@@ -1,0 +1,15 @@
+{
+    "apps": [
+        {
+            "root": "ClientApp"
+        }
+    ],
+    "defaults": {
+        "component": {
+            "spec": false
+        },
+        "service": {
+            "spec": false
+        }
+    }
+}
