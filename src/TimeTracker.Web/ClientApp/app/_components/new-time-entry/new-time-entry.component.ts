@@ -2,6 +2,8 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { TimesheetEntry } from "../../_models/timesheet-entry";
 import { Project } from "../../_models/project";
 import { ProjectService } from "../../_services/project.service";
+import { Store } from "@ngrx/store";
+import { ADD_TIME_ENTRY } from "../../_redux/reducer";
 
 @Component({
   selector: 'new-time-entry',
@@ -9,9 +11,7 @@ import { ProjectService } from "../../_services/project.service";
   styleUrls: ['./new-time-entry.component.css']
 })
 export class NewTimeEntryComponent implements OnInit {
-
-  @Input() timesheetEntry: TimesheetEntry;
-  @Output() createEntry = new EventEmitter();
+  timesheetEntry = new TimesheetEntry();
   description: string;
   project: Project;
   totalSeconds: number;
@@ -22,7 +22,7 @@ export class NewTimeEntryComponent implements OnInit {
   projects: Project[];
   projectId: number;
 
-  constructor(private projectService: ProjectService) { 
+  constructor(private projectService: ProjectService, private store: Store<any>) { 
     this.totalSeconds = 0;
     this.timer = null;
     this.hours = 0;
@@ -32,10 +32,6 @@ export class NewTimeEntryComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (this.timesheetEntry == null) {
-      this.timesheetEntry = new TimesheetEntry();
-    }
-
     this.projectService.getProjects().subscribe(
       data => this.projects = data,
       error => console.error('An error occurred', error));
@@ -52,7 +48,9 @@ export class NewTimeEntryComponent implements OnInit {
       this.timesheetEntry.endTime = new Date();
       this.timesheetEntry.project = this.projects.find(p => p.id == +this.projectId);
       this.projectId = 0;
-      this.createEntry.emit(this.timesheetEntry);
+
+      this.store.dispatch({type: ADD_TIME_ENTRY, payload: this.timesheetEntry});
+
       this.timesheetEntry = new TimesheetEntry();
     }
     else {

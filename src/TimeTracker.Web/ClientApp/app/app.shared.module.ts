@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { RouterModule, UrlSerializer } from '@angular/router';
 
+import {StoreModule} from '@ngrx/store';
+import {StoreDevtoolsModule} from '@ngrx/store-devtools';
+import { EffectsModule } from "@ngrx/effects";
+
 import {AuthModule, OpenIDImplicitFlowConfiguration, OidcSecurityService} from 'angular-auth-oidc-client';
 
 import { appRoutes } from "./_routes/routes";
@@ -20,6 +24,8 @@ import { ProjectService } from "./_services/project.service";
 import { TimesheetEntryService } from "./_services/timesheet-entry.service";
 import { AuthActivatorService } from "./_services/auth-activator.service";
 import { LowerCaseUrlSerializer } from "./_providers/lower-case-url-serializer";
+import { timeentryReducer } from "./_redux/reducer";
+import { TimeentryEffects } from "./_redux/timeentryEffect";
 
 @NgModule({
     declarations: [
@@ -37,7 +43,10 @@ import { LowerCaseUrlSerializer } from "./_providers/lower-case-url-serializer";
         HttpModule,
         FormsModule,
         RouterModule.forRoot(appRoutes),
-        AuthModule.forRoot()
+        AuthModule.forRoot(),
+        StoreModule.forRoot({timeentryReducer}),
+        StoreDevtoolsModule.instrument(),
+        EffectsModule.forRoot([TimeentryEffects])
     ],
     providers: [
         OidcSecurityService,

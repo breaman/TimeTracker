@@ -1,5 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { TimesheetEntry } from "../../_models/timesheet-entry";
+import { Store } from "@ngrx/store";
+import { Observable } from "rxjs/Observable";
 
 @Component({
   selector: 'time-entry-list',
@@ -7,10 +9,11 @@ import { TimesheetEntry } from "../../_models/timesheet-entry";
   styleUrls: ['./time-entry-list.component.css']
 })
 export class TimeEntryListComponent implements OnInit {
-  @Input() timesheetEntries: TimesheetEntry[];
+  timesheetEntries$: Observable<any>;
 
-  constructor() { }
+  constructor(private store: Store<any>) { }
 
   ngOnInit() {
+    this.timesheetEntries$ = this.store.select('timeentryReducer');
   }
 }
