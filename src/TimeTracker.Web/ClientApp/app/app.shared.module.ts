@@ -18,6 +18,7 @@ import { Error404Component } from './_components/error404/error404.component';
 import { FormatTimespanPipe } from "./_pipes/format-timespan.pipe";
 import { ProjectService } from "./_services/project.service";
 import { TimesheetEntryService } from "./_services/timesheet-entry.service";
+import { AuthActivatorService } from "./_services/auth-activator.service";
 
 @NgModule({
     declarations: [
@@ -40,8 +41,31 @@ import { TimesheetEntryService } from "./_services/timesheet-entry.service";
     providers: [
         OidcSecurityService,
         ProjectService,
-        TimesheetEntryService
+        TimesheetEntryService,
+        AuthActivatorService
     ]
 })
 export class AppModuleShared {
+    constructor(public oidcSecurityService: OidcSecurityService) {
+        let openIDImplicitFlowConfiguration = new OpenIDImplicitFlowConfiguration();
+
+        openIDImplicitFlowConfiguration.stsServer = 'http://localhost:5000';
+        openIDImplicitFlowConfiguration.redirect_url = 'http://localhost:5000';
+
+        openIDImplicitFlowConfiguration.client_id = 'angular';
+        openIDImplicitFlowConfiguration.response_type = 'id_token token';
+        openIDImplicitFlowConfiguration.scope = 'openid profile';
+        openIDImplicitFlowConfiguration.post_logout_redirect_uri = 'http://localhost:5000';
+        openIDImplicitFlowConfiguration.start_checksession = false;
+        openIDImplicitFlowConfiguration.max_id_token_iat_offset_allowed_in_seconds = 10;
+        openIDImplicitFlowConfiguration.silent_renew = true;
+        openIDImplicitFlowConfiguration.auto_userinfo = true;
+
+        openIDImplicitFlowConfiguration.startup_route = '/';
+
+        openIDImplicitFlowConfiguration.log_console_warning_active = true;
+        openIDImplicitFlowConfiguration.log_console_debug_active = true;
+
+        this.oidcSecurityService.setupModule(openIDImplicitFlowConfiguration);
+    }
 }

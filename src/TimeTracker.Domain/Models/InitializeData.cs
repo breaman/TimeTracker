@@ -1,9 +1,12 @@
 using System;
 using System.Linq;
+using System.Threading;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OpenIddict.Core;
+using OpenIddict.Models;
 using TimeTracker.Domain.Concrete;
 
 namespace TimeTracker.Domain.Models
@@ -79,6 +82,24 @@ namespace TimeTracker.Domain.Models
                 context.Projects.Add(new Project { Title = "Biztalk", ClientId = context.Clients.SingleOrDefault(client => client.Name == "Adventureworks").Id });
 
                 context.SaveChanges();
+            }
+
+            var openIddictApplicationManager = serviceProvider.GetRequiredService<OpenIddictApplicationManager<OpenIddictApplication>>();
+
+            var findByClientIdTask = openIddictApplicationManager.FindByClientIdAsync("angular", CancellationToken.None);
+            findByClientIdTask.Wait();
+            if (findByClientIdTask.Result == null)
+            {
+                var application = new OpenIddictApplication
+                {
+                    ClientId = "angular",
+                    DisplayName = "Angular client application",
+                    LogoutRedirectUri = "http://localhost:5000",
+                    RedirectUri = "http://localhost:5000"
+                };
+
+                var createTask = openIddictApplicationManager.CreateAsync(application, CancellationToken.None);
+                createTask.Wait();
             }
         }
     }

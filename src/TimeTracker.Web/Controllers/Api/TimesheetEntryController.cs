@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNet.Security.OpenIdConnect.Primitives;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TimeTracker.Domain.Abstract;
@@ -9,6 +12,7 @@ using TimeTracker.Domain.Models;
 namespace TimeTracker.Web.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class TimesheetEntryController : Controller
     {
         public ITimesheetEntryRepository TimesheetRepository { get; }
@@ -22,6 +26,8 @@ namespace TimeTracker.Web.Controllers
         [ResponseCache(NoStore=true)]
         public IEnumerable<TimesheetEntry> Get()
         {
+            var userId = Convert.ToInt32(User.FindFirst(OpenIdConnectConstants.Claims.Subject).Value);
+
             var timesheetEntries = TimesheetRepository.AllIncluding(t => t.Project, t => t.Project.Client).OrderByDescending(t => t.EndTime);
 
             return timesheetEntries;
@@ -30,7 +36,8 @@ namespace TimeTracker.Web.Controllers
         [HttpPost]
         public async Task<TimesheetEntry> Post([FromBody]TimesheetEntry timesheetEntry)
         {
-            timesheetEntry.UserId = 1;
+            var userId = Convert.ToInt32(User.FindFirst(OpenIdConnectConstants.Claims.Subject).Value);
+            timesheetEntry.UserId = userId;
             timesheetEntry.ProjectId = timesheetEntry.Project.Id;
             timesheetEntry.Project = null;
 

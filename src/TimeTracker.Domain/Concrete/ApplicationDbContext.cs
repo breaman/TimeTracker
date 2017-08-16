@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using OpenIddict.Models;
 using TimeTracker.Domain.Models;
 
 namespace TimeTracker.Domain.Concrete
@@ -9,6 +10,7 @@ namespace TimeTracker.Domain.Concrete
         public DbSet<TimesheetEntry> TimesheetEntries { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<Project> Projects { get; set; }
+        public DbSet<OpenIddictApplication> OpenIddictApplications { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         { }
     }

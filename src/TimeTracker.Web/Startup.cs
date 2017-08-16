@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNet.Security.OpenIdConnect.Primitives;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -32,6 +34,10 @@ namespace TimeTracker.Web
             services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlite(Configuration.GetConnectionString("DefaultConnection"));
+
+                // Register the entity sets needed by OpenIdDict.
+                // Using the generic overload here since we are using custom user and role classes
+                options.UseOpenIddict<int>();
             });
 
             services.AddIdentity<User, Role>(o =>
@@ -44,6 +50,67 @@ namespace TimeTracker.Web
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+
+            // Configure Identity to use the same JWT claims as OpenIddict instead
+            // of the legacy WS-Federation claims it uses by default (ClaimTypes),
+            // which saves you from doing the mapping in your authorization controller.
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.ClaimsIdentity.UserNameClaimType = OpenIdConnectConstants.Claims.Name;
+                options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
+                options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
+            });
+
+            services.AddAuthentication()
+                // .AddJwtBearer(options => {
+                //     options.RequireHttpsMetadata = false;
+                //     options.Audience = "http://localhost:5000";
+                //     options.ClaimsIssuer = "http://localhost:5000";
+                //     options.TokenValidationParameters.ValidAudience = "http://localhost:5000";
+                //     options.TokenValidationParameters.ValidIssuer = "http://localhost:5000";
+                // })
+                .AddOAuthValidation();
+
+            // Register the OpenIddict services.
+            services.AddOpenIddict(options =>
+            {
+                // Register the Entity Framework stores.
+                options.AddEntityFrameworkCoreStores<ApplicationDbContext>();
+
+                // Register the ASP.NET Core MVC binder used by OpenIddict.
+                // Note: if you don't call this method, you won't be able to
+                // bind OpenIdConnectRequest or OpenIdConnectResponse parameters.
+                options.AddMvcBinders();
+
+                // Enable the authorization, logout, token and userinfo endpoints.
+                options.EnableAuthorizationEndpoint("/connect/authorize")
+                       .EnableLogoutEndpoint("/connect/logout")
+                       .EnableTokenEndpoint("/connect/token")
+                       .EnableUserinfoEndpoint("/api/userinfo");
+
+                // Note: the Mvc.Client sample only uses the code flow and the password flow, but you
+                // can enable the other flows if you need to support implicit or client credentials.
+                options.AllowImplicitFlow();
+
+                // Make the "client_id" parameter mandatory when sending a token request.
+                options.RequireClientIdentification();
+
+                // When request caching is enabled, authorization and logout requests
+                // are stored in the distributed cache by OpenIddict and the user agent
+                // is redirected to the same page with a single parameter (request_id).
+                // This allows flowing large OpenID Connect requests even when using
+                // an external authentication provider like Google, Facebook or Twitter.
+                options.EnableRequestCaching();
+
+                // During development, you can disable the HTTPS requirement.
+                options.DisableHttpsRequirement();
+
+                // Note: to use JWT access tokens instead of the default
+                // encrypted format, the following lines are required:
+                //
+                //options.UseJsonWebTokens();
+                options.AddDevelopmentSigningCertificate();
+            });
 
             services.AddMvc();
 
