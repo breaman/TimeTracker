@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
-import { RouterModule } from '@angular/router';
+import { RouterModule, UrlSerializer } from '@angular/router';
 
 import {AuthModule, OpenIDImplicitFlowConfiguration, OidcSecurityService} from 'angular-auth-oidc-client';
 
@@ -19,6 +19,7 @@ import { FormatTimespanPipe } from "./_pipes/format-timespan.pipe";
 import { ProjectService } from "./_services/project.service";
 import { TimesheetEntryService } from "./_services/timesheet-entry.service";
 import { AuthActivatorService } from "./_services/auth-activator.service";
+import { LowerCaseUrlSerializer } from "./_providers/lower-case-url-serializer";
 
 @NgModule({
     declarations: [
@@ -42,7 +43,8 @@ import { AuthActivatorService } from "./_services/auth-activator.service";
         OidcSecurityService,
         ProjectService,
         TimesheetEntryService,
-        AuthActivatorService
+        AuthActivatorService,
+        {provide: UrlSerializer, useClass: LowerCaseUrlSerializer}
     ]
 })
 export class AppModuleShared {
@@ -59,7 +61,6 @@ export class AppModuleShared {
         openIDImplicitFlowConfiguration.start_checksession = false;
         openIDImplicitFlowConfiguration.max_id_token_iat_offset_allowed_in_seconds = 10;
         openIDImplicitFlowConfiguration.silent_renew = true;
-        openIDImplicitFlowConfiguration.auto_userinfo = true;
 
         openIDImplicitFlowConfiguration.startup_route = '/';
 
